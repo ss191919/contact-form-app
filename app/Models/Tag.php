@@ -20,7 +20,7 @@ class Tag extends Model
     ];
 
     /**
-     * 問い合わせとのリレーション
+     * お問い合わせとのリレーション
      */
     public function contacts(): BelongsToMany
     {
