@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ContactRequest;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Models\Contact;
 
 
 class ContactController extends Controller
@@ -49,7 +50,28 @@ class ContactController extends Controller
      */
     public function store(ContactRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        //contactsテーブルへ保存
+        $contact = Contact::create([
+            'category_id' => $validated['category_id'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'gender' => $validated['gender'],
+            'email' => $validated['email'],
+            'tel' => $validated['tel'],
+            'address' => $validated['address'],
+            'building' => $validated['building'] ?? null,
+            'detail' => $validated['detail']
+        ]);
+
+        //contact_tagテーブルへ保存
+        if (!empty($validated['tag_ids'])) {
+            $contact->tags()->attach($validated['tag_ids']);
+        }
+
+        //完了画面へ
+        return redirect()->route('contact.thanks');
     }
 
     /**
