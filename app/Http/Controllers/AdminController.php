@@ -49,4 +49,11 @@ class AdminController extends Controller
 
         return view('admin.show', compact('contact'));
     }
+
+    public function destroy(Contact $contact)
+    {
+        $contact->delete();
+        
+        return redirect('/admin');
+    }
 }
