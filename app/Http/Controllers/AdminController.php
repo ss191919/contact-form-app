@@ -42,4 +42,11 @@ class AdminController extends Controller
             'tags'
         ));
     }
+
+    public function show(Contact $contact)
+    {
+        $contact->load(['category', 'tags']);
+
+        return view('admin.show', compact('contact'));
+    }
 }
