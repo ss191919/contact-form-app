@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
+use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
@@ -17,12 +17,12 @@ class CategorySeeder extends Seeder
             '商品の交換について',
             '商品トラブル',
             'ショップへのお問い合わせ',
-            'その他'
+            'その他',
         ];
 
         foreach ($categories as $category) {
             Category::create([
-                'content' => $category
+                'content' => $category,
             ]);
         }
     }

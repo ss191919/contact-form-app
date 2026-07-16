@@ -34,7 +34,6 @@ class AdminController extends Controller
             })
             ->paginate(7);
 
-
         $categories = Category::all();
         $tags = Tag::all();
 
@@ -57,6 +56,7 @@ class AdminController extends Controller
     public function destroy(Contact $contact)
     {
         $contact->delete();
+
         return redirect('/admin');
     }
 
@@ -68,12 +68,12 @@ class AdminController extends Controller
                 'required',
                 'string',
                 'max:50',
-                'unique:tags,name'
+                'unique:tags,name',
             ],
         ]);
 
         Tag::create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
         return redirect('/admin');
@@ -93,12 +93,12 @@ class AdminController extends Controller
             'name' => [
                 'required', 'string',
                 'max:50',
-                Rule::unique('tags', 'name')->ignore($tag->id)
+                Rule::unique('tags', 'name')->ignore($tag->id),
             ],
         ]);
 
         $tag->update([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
         return redirect('/admin');
@@ -108,6 +108,7 @@ class AdminController extends Controller
     public function destroyTag(Tag $tag)
     {
         $tag->delete();
+
         return redirect('/admin');
     }
 }

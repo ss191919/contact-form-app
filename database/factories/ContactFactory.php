@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-
 class ContactFactory extends Factory
 {
     /**
@@ -34,7 +33,7 @@ class ContactFactory extends Factory
 
             'building' => $faker->optional()->secondaryAddress(),
 
-            'detail' => $faker->realText(120)
+            'detail' => $faker->realText(120),
         ];
     }
 }

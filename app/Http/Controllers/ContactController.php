@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ContactRequest;
 use App\Models\Category;
-use App\Models\Tag;
 use App\Models\Contact;
-
+use App\Models\Tag;
 
 class ContactController extends Controller
 {
@@ -21,11 +20,9 @@ class ContactController extends Controller
         return view('contact.index', compact('categories', 'tags'));
     }
 
-
     /**
      * 入力内容確認画面表示
      */
-
     public function confirm(ContactRequest $request)
     {
         $validated = $request->validated();
@@ -33,7 +30,7 @@ class ContactController extends Controller
 
         $tags = collect();
 
-        if (!empty($validated['tag_ids'])) {
+        if (! empty($validated['tag_ids'])) {
             $tags = Tag::whereIn('id', $validated['tag_ids'])->get();
         }
 
@@ -44,7 +41,6 @@ class ContactController extends Controller
         ));
     }
 
-
     /**
      * 保存処理
      */
@@ -52,7 +48,7 @@ class ContactController extends Controller
     {
         $validated = $request->validated();
 
-        //contactsテーブルへ保存
+        // contactsテーブルへ保存
         $contact = Contact::create([
             'category_id' => $validated['category_id'],
             'first_name' => $validated['first_name'],
@@ -62,15 +58,15 @@ class ContactController extends Controller
             'tel' => $validated['tel'],
             'address' => $validated['address'],
             'building' => $validated['building'] ?? null,
-            'detail' => $validated['detail']
+            'detail' => $validated['detail'],
         ]);
 
-        //contact_tagテーブルへ保存
-        if (!empty($validated['tag_ids'])) {
+        // contact_tagテーブルへ保存
+        if (! empty($validated['tag_ids'])) {
             $contact->tags()->attach($validated['tag_ids']);
         }
 
-        //完了画面へ
+        // 完了画面へ
         return redirect()->route('contact.thanks');
     }
 
