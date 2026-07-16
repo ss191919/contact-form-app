@@ -6,9 +6,11 @@ use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
+    // 一覧
     public function index(Request $request)
     {
         $contacts = Contact::with(['category', 'tags'])
@@ -43,6 +45,7 @@ class AdminController extends Controller
         ));
     }
 
+    // 詳細
     public function show(Contact $contact)
     {
         $contact->load(['category', 'tags']);
@@ -50,10 +53,61 @@ class AdminController extends Controller
         return view('admin.show', compact('contact'));
     }
 
+    // お問い合わせ削除
     public function destroy(Contact $contact)
     {
         $contact->delete();
-        
+        return redirect('/admin');
+    }
+
+    // タグ追加
+    public function storeTag(Request $request)
+    {
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:tags,name'
+            ],
+        ]);
+
+        Tag::create([
+            'name' => $request->name
+        ]);
+
+        return redirect('/admin');
+
+    }
+
+    // タグ編集画面表示
+    public function editTag(Tag $tag)
+    {
+        return view('admin.tags.edit', compact('tag'));
+    }
+
+    // タグ更新処理
+    public function updateTag(Request $request, Tag $tag)
+    {
+        $request->validate([
+            'name' => [
+                'required', 'string',
+                'max:50',
+                Rule::unique('tags', 'name')->ignore($tag->id)
+            ],
+        ]);
+
+        $tag->update([
+            'name' => $request->name
+        ]);
+
+        return redirect('/admin');
+    }
+
+    // タグ削除処理
+    public function destroyTag(Tag $tag)
+    {
+        $tag->delete();
         return redirect('/admin');
     }
 }
