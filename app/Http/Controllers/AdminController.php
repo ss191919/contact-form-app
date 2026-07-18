@@ -13,25 +13,7 @@ class AdminController extends Controller
     // 一覧
     public function index(Request $request)
     {
-        $contacts = Contact::with(['category', 'tags'])
-            ->when($request->keyword, function ($query) use ($request) {
-                $keyword = $request->keyword;
-
-                $query->where(function ($query) use ($keyword) {
-                    $query->where('first_name', 'like', "%{$keyword}%")
-                        ->orWhere('last_name', 'like', "%{$keyword}%")
-                        ->orWhere('email', 'like', "%{$keyword}%");
-                });
-            })
-            ->when($request->gender, function ($query) use ($request) {
-                $query->where('gender', $request->gender);
-            })
-            ->when($request->category_id, function ($query) use ($request) {
-                $query->where('category_id', $request->category_id);
-            })
-            ->when($request->date, function ($query) use ($request) {
-                $query->whereDate('created_at', $request->date);
-            })
+        $contacts = $this->getFilteredContacts($request)
             ->paginate(7);
 
         $categories = Category::all();
@@ -110,5 +92,107 @@ class AdminController extends Controller
         $tag->delete();
 
         return redirect('/admin');
+    }
+
+    // CSVエクスポート
+    public function export(Request $request)
+    {
+        $request->validate([
+            'keyword' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'gender' => [
+                'nullable',
+                'integer',
+                'in:0,1,2,3',
+            ],
+            'category_id' => [
+                'nullable',
+                'integer',
+                'exists:categories,id',
+            ],
+            'date' => [
+                'nullable',
+                'date',
+            ],
+        ]);
+
+        $contacts = $this->getFilteredContacts($request)
+            ->latest()
+            ->get();
+
+        return response()->streamDownload(function () use ($contacts) {
+            $stream = fopen('php://output', 'w');
+
+            // BOM
+            fwrite($stream, "\xEF\xBB\xBF");
+
+            // ヘッダー
+            fputcsv($stream, [
+                'ID',
+                '氏名',
+                '性別',
+                'メール',
+                '電話',
+                '住所',
+                '建物',
+                'カテゴリ',
+                '内容',
+                '作成日時',
+            ]);
+
+            foreach ($contacts as $contact) {
+                fputcsv($stream, [
+                    $contact->id,
+                    $contact->last_name.' '.$contact->first_name,
+                    $this->genderText($contact->gender),
+                    $contact->email,
+                    $contact->tel,
+                    $contact->address,
+                    $contact->building,
+                    $contact->category->content,
+                    $contact->detail,
+                    $contact->created_at,
+                ]);
+            }
+
+            fclose($stream);
+        }, 'contacts.csv');
+    }
+
+    // 補助メソッド
+    private function getFilteredContacts(Request $request)
+    {
+        return Contact::with(['category', 'tags'])
+            ->when($request->keyword, function ($query) use ($request) {
+                $keyword = $request->keyword;
+
+                $query->where(function ($query) use ($keyword) {
+                    $query->where('first_name', 'like', "%{$keyword}%")
+                        ->orWhere('last_name', 'like', "%{$keyword}%")
+                        ->orWhere('email', 'like', "%{$keyword}%");
+                });
+            })
+            ->when($request->gender, function ($query) use ($request) {
+                $query->where('gender', $request->gender);
+            })
+            ->when($request->category_id, function ($query) use ($request) {
+                $query->where('category_id', $request->category_id);
+            })
+            ->when($request->date, function ($query) use ($request) {
+                $query->whereDate('created_at', $request->date);
+            });
+    }
+
+    private function genderText($gender): string
+    {
+        return match ($gender) {
+            1 => '男性',
+            2 => '女性',
+            3 => 'その他',
+            default => '',
+        };
     }
 }

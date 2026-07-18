@@ -331,4 +331,91 @@ class AdminControllerTest extends TestCase
 
         $response->assertRedirect('/login');
     }
+
+    /**
+     * @test
+     */
+    public function cs_vをダウンロードできる(): void
+    {
+        $user = User::factory()->create();
+
+        $category = Category::factory()->create([
+            'content' => '商品について',
+        ]);
+
+        Contact::factory()->create([
+            'category_id' => $category->id,
+            'first_name' => '太郎',
+            'last_name' => '山田',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/contacts/export');
+
+        $response->assertStatus(200);
+
+        $response->assertHeader(
+            'content-disposition');
+    }
+
+    /**
+     * @test
+     */
+    public function 条件指定した_cs_vをダウンロードできる(): void
+    {
+        $user = User::factory()->create();
+
+        $category = Category::factory()->create();
+
+        $targetContact = Contact::factory()->create([
+            'category_id' => $category->id,
+            'gender' => 1,
+        ]);
+
+        Contact::factory()->create([
+            'category_id' => $category->id,
+            'gender' => 2,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/contacts/export?gender=1');
+
+        $response->assertStatus(200);
+
+        $response->assertHeader(
+            'content-disposition');
+    }
+
+    /**
+     * @test
+     */
+    public function フィルタ未指定時は新着順で_cs_v出力される(): void
+    {
+        $user = User::factory()->create();
+
+        $category = Category::factory()->create();
+
+        $oldContact = Contact::factory()->create([
+            'category_id' => $category->id,
+            'first_name' => '古い',
+            'created_at' => '2026-07-16 10:00:00',
+        ]);
+
+        $newContact = Contact::factory()->create([
+            'category_id' => $category->id,
+            'first_name' => '新しい',
+            'created_at' => '2026-07-17 10:00:00',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/contacts/export');
+
+        $response->assertStatus(200);
+
+        $content = $response->streamedContent();
+
+        $this->assertTrue(
+            strpos($content, '新しい') < strpos($content, '古い')
+        );
+    }
 }
